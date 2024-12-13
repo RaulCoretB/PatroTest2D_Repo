@@ -12,10 +12,14 @@ public class PlayerController2D : MonoBehaviour
 
     [Header("Movement Parameters")]
     public float speed;
+    [SerializeField] bool isFacingRight;
 
     [Header("Jump parameters")]
     public float jumpForce;
-   [SerializeField] private bool isGrounded;
+    [SerializeField] private bool isGrounded;
+    [SerializeField] GameObject groundCheck;
+    [SerializeField] float groundCheckRadius;
+    [SerializeField] LayerMask groundLayer;
 
 
     // Start is called before the first frame update
@@ -24,12 +28,15 @@ public class PlayerController2D : MonoBehaviour
       //Praa autpreferirse: nombre de variabl e= GetComponent<tipo de variable>()
       playerRb = GetComponent<Rigidbody2D>();
       playerInput = GetComponent<PlayerInput>();
+        isFacingRight = true;
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        GroundCheck();
+        if (moveInput.x > 0 && !isFacingRight) flip();
+        if (moveInput.x < 0 && isFacingRight) flip();
     }
 
     private void FixedUpdate()
@@ -40,6 +47,22 @@ public class PlayerController2D : MonoBehaviour
     {
         playerRb.velocity = new Vector3(moveInput.x * speed, playerRb.velocity.y, 0);
     }
+    void flip()
+    {
+        Vector3 currentScale = transform.localScale;
+        currentScale.x *= -1;
+        transform.localScale = currentScale;
+        isFacingRight = !isFacingRight;
+    }
+
+
+    void GroundCheck()
+    {
+        //isGrounded es verdadero cuando el circulo detector toque la layer ground.
+        isGrounded = Physics2D.OverlapCircle(groundCheck.transform.position, groundCheckRadius, groundLayer);
+    }
+
+
 
     #region Input Methods
     // metodos que permiten leer el inpt de New Input System
@@ -56,7 +79,11 @@ public class PlayerController2D : MonoBehaviour
     {
         if(context.started)
         {
-            playerRb.AddForce(Vector3.up * jumpForce, ForceMode2D.Impulse);
+            if (isGrounded)
+            {
+                playerRb.AddForce(Vector3.up * jumpForce, ForceMode2D.Impulse);
+            }
+          
         }
 
     }
